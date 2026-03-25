@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { RedisModule } from './modules/redis/redis.module.js';
 import { LanguageModule } from './language/language.module.js';
 import { ConfigModule } from '@nestjs/config';
+import { CategoryModule } from './category/category.module.js';
 
 @Module({
   imports: [
@@ -10,6 +11,7 @@ import { ConfigModule } from '@nestjs/config';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    CategoryModule,
   ],
   controllers: [],
   providers: [],
