@@ -44,6 +44,7 @@ model category {
 model course {
   id          Int     @id @default(autoincrement())
   title       String
+  cid         String  @unique
   description String?
   icon        String?
 
