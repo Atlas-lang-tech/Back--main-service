@@ -61,6 +61,7 @@ model course {
 
 model lesson {
   id          Int     @id @default(autoincrement())
+  cid         String  @unique
   title       String
   description String?
   icon        String?

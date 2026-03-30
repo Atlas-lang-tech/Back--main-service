@@ -4,6 +4,7 @@ import { LanguageModule } from './language/language.module.js';
 import { ConfigModule } from '@nestjs/config';
 import { CategoryModule } from './category/category.module.js';
 import { CourseModule } from './course/course.module.js';
+import { LessonModule } from './lesson/lesson.module.js';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { CourseModule } from './course/course.module.js';
     }),
     CategoryModule,
     CourseModule,
+    LessonModule,
   ],
   controllers: [],
   providers: [],
