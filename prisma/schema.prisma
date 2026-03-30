@@ -76,7 +76,7 @@ model lesson {
 
 model blokInfo {
   id       Int     @id @default(autoincrement())
-  number   Int
+  order    Int
   title    String
   text     String?
   lesson   lesson  @relation(fields: [lessonId], references: [id])
@@ -87,7 +87,7 @@ model blokInfo {
 
 model blokQuiz {
   id                   Int                   @id @default(autoincrement())
-  number               Int
+  order                Int
   title                String
   text                 String?
   lesson               lesson                @relation(fields: [lessonId], references: [id])
