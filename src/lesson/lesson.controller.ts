@@ -11,7 +11,7 @@ import {
 import { LessonService } from './lesson.service.js';
 import { CreateLessonDto } from './dto/create.dto.js';
 
-@Controller('lesson')
+@Controller('private/lesson')
 export class LessonController {
   constructor(private readonly lessonService: LessonService) {}
 

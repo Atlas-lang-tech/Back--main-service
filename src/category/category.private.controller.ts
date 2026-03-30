@@ -11,8 +11,8 @@ import {
 import { CategoryService } from './category.service.js';
 import { CreateCategoryDto } from './dto/create.dto.js';
 
-@Controller('category')
-export class CategoryController {
+@Controller('private/category')
+export class CategoryPrivateController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
@@ -23,12 +23,6 @@ export class CategoryController {
 
     const createCategory = await this.categoryService.create(DTO);
     return createCategory;
-  }
-
-  @Get()
-  async getAllCategories() {
-    const categories = await this.categoryService.findAll();
-    return categories;
   }
 
   @Get(':id')

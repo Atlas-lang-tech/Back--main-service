@@ -12,7 +12,7 @@ import { LessonInfoBlokService } from './lesson-info-blok.service.js';
 import { CreateInfoDto } from './dto/CreateInfoBlock.dto.js';
 import { LessonQuizBlokService } from './lesson-quiz-blok.service.js';
 
-@Controller('lesson-blok')
+@Controller('private/lesson-blok')
 export class LessonBlokController {
   constructor(
     private readonly lessonInfoBlokService: LessonInfoBlokService,
