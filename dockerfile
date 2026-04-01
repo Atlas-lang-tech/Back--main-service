@@ -5,21 +5,26 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
-# Если есть нативные зависимости для Prisma
+# Для нативных зависимостей (Prisma, bcrypt и т.д.)
 RUN apk add --no-cache bash python3 make g++
 
-# Устанавливаем зависимости
-COPY package*.json ./
-RUN npm ci
+# Устанавливаем pnpm глобально
+RUN npm install -g pnpm
+
+# Копируем файлы зависимостей
+COPY package.json pnpm-lock.yaml ./
+
+# Устанавливаем зависимости (все, включая dev)
+RUN pnpm install
 
 # Копируем весь код
 COPY . .
 
 # Генерация Prisma Client
-RUN npx prisma generate
+RUN pnpm prisma generate
 
 # Сборка NestJS
-RUN npm run build
+RUN pnpm build
 
 # =========================
 # 2. Production stage
@@ -28,15 +33,20 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Только prod зависимости
-COPY package*.json ./
-RUN npm install --omit=dev
+# Устанавливаем pnpm
+RUN npm install -g pnpm
 
-# Копируем билд
+# Копируем файлы зависимостей
+COPY package.json pnpm-lock.yaml ./
+
+# Устанавливаем только production зависимости
+RUN pnpm install --prod
+
+# Копируем билд и Prisma
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma
 
-# Порт приложения
+# Порт NestJS
 EXPOSE 3000
 
 # Запуск
