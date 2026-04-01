@@ -6,6 +6,7 @@ import { CategoryModule } from './category/category.module.js';
 import { CourseModule } from './course/course.module.js';
 import { LessonModule } from './lesson/lesson.module.js';
 import { LessonBlokModule } from './lesson-blok/lesson-blok.module.js';
+import { validate } from './common/env.validation.js';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { LessonBlokModule } from './lesson-blok/lesson-blok.module.js';
     LanguageModule,
     ConfigModule.forRoot({
       isGlobal: true,
+      validate,
     }),
     CategoryModule,
     CourseModule,
