@@ -1,41 +1,36 @@
 # =========================
-# 1. Stage: Build
+# 1. Build stage
 # =========================
-FROM node:20-alpine AS builder
+FROM node:20-alpine AS build
 
-# Создаём рабочую директорию
 WORKDIR /app
 
-# Копируем package.json и package-lock.json
+# Устанавливаем зависимости (с кэшем)
 COPY package*.json ./
+RUN npm ci
 
-# Устанавливаем зависимости
-RUN npm install --frozen-lockfile
-
-# Копируем весь код
+# Копируем код
 COPY . .
 
-# Сборка NestJS
+# Сборка
 RUN npm run build
 
 # =========================
-# 2. Stage: Runtime
+# 2. Production stage
 # =========================
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Копируем только необходимые файлы из builder
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
+# Только production зависимости
+COPY package*.json ./
+RUN npm ci --omit=dev
 
-# Устанавливаем переменные окружения через docker-compose/env_file
-ENV NODE_ENV=production
-ENV PORT=3000
+# Копируем билд
+COPY --from=build /app/dist ./dist
 
-# Открываем порт
+# Порт (NestJS по умолчанию 3000)
 EXPOSE 3000
 
-# Запуск приложения
+# Запуск
 CMD ["node", "dist/main.js"]
