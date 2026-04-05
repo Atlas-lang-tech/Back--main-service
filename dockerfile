@@ -5,13 +5,13 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
-# Для нативных зависимостей (Prisma, bcrypt и т.д.)
+# Для нативных зависимостей
 RUN apk add --no-cache bash python3 make g++
 
-# Устанавливаем pnpm глобально
+# Устанавливаем pnpm
 RUN npm install -g pnpm
 
-# Копируем файлы зависимостей
+# Копируем зависимости
 COPY package.json pnpm-lock.yaml ./
 
 # Устанавливаем все зависимости (dev + prod)
