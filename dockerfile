@@ -14,7 +14,7 @@ RUN npm install -g pnpm
 # Копируем файлы зависимостей
 COPY package.json pnpm-lock.yaml ./
 
-# Устанавливаем зависимости (все, включая dev)
+# Устанавливаем все зависимости (dev + prod)
 RUN pnpm install
 
 # Копируем весь код
@@ -36,18 +36,14 @@ WORKDIR /app
 # Устанавливаем pnpm
 RUN npm install -g pnpm
 
-# Копируем файлы зависимостей
-COPY package.json pnpm-lock.yaml ./
-
-# Устанавливаем только production зависимости
-RUN pnpm install --prod
-
-# Копируем билд и Prisma
+# Копируем node_modules, билд и Prisma из build stage
+COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma
+COPY package.json ./
 
 # Порт NestJS
 EXPOSE 3000
 
-# Запуск
-CMD ["node", "dist/main.js"]
+# Запуск через pnpm start:prod
+CMD ["pnpm", "start:prod"]
