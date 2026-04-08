@@ -6,10 +6,17 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableCors();
   app.setGlobalPrefix('api/course');
 
   app.useGlobalInterceptors(new TransformInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter());
+
+  app.enableCors({
+    origin: ['http://localhost:5173', 'https://example.com'],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
 
   const config = new DocumentBuilder()
     .setTitle('API Documentation')
