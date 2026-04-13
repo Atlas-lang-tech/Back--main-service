@@ -1,6 +1,7 @@
 import { BadRequestException, Controller, Get, Param } from '@nestjs/common';
 import { LanguageService } from './language.service.js';
 import { LanguageLvlService } from './languageLvl.service.js';
+
 @Controller('public/language')
 export class LanguagePublicController {
   constructor(
@@ -14,7 +15,7 @@ export class LanguagePublicController {
     return languages;
   }
 
-  @Get('/languageLvl/:id')
+  @Get('/level/:id')
   async getAllLanguagesLvl(@Param('id') id: number) {
     if (!id) {
       throw new BadRequestException('Invalid language ID');
@@ -30,7 +31,7 @@ export class LanguagePublicController {
     return languagesLvl;
   }
 
-  @Get('/languageLvl/id/:id')
+  @Get('/level/id/:id')
   async getLanguageLvlById(@Param('id') id: number) {
     if (!id) {
       throw new BadRequestException('Invalid language level ID');

@@ -78,7 +78,7 @@ export class LanguagePrivateController {
     return { message: 'Language deleted successfully' };
   }
 
-  @Post('/LanguageLvl/:id')
+  @Post('/level/:id')
   async createLanguageLvl(
     @Body() DTO: AddLanguageLvlDto,
     @Param('id') id: number,
@@ -102,7 +102,13 @@ export class LanguagePrivateController {
     return createLanguage;
   }
 
-  @Put('/languageLvl/:id')
+  @Get('/level/all')
+  async getAllLanguageLvl() {
+    const languagesLvl = await this.languageLvlService.getAll();
+    return languagesLvl;
+  }
+
+  @Put('/level/:id')
   async updateLanguageLvl(
     @Param('id') id: number,
     @Body() DTO: AddLanguageLvlDto,
@@ -126,7 +132,7 @@ export class LanguagePrivateController {
     return updatedLanguageLvl;
   }
 
-  @Delete('/languageLvl/:id')
+  @Delete('/level/:id')
   async deleteLanguageLvl(@Param('id') id: number) {
     if (!id) {
       throw new BadRequestException('Invalid language level ID');

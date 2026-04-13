@@ -27,7 +27,7 @@ export class CourseService {
         title: DTO.title,
         cid: DTO.cid,
         description: DTO.description,
-        icon: DTO.icons,
+        icon: DTO.icon,
         languageId: DTO.languageId,
         languageLvlId: DTO.languageLvlId,
         categoryId: DTO.categoryId,

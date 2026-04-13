@@ -37,6 +37,20 @@ export class LanguageLvlService {
     return newLanguageLvl;
   }
 
+  async getAll() {
+    const cacheKeyAll = `${this.cacheKey}all`;
+    const cached = await this.cache.get(cacheKeyAll);
+
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
+    const languagesLvl = await this.db.languageLvl.findMany();
+    await this.cache.set(cacheKeyAll, JSON.stringify(languagesLvl), 3600);
+
+    return languagesLvl;
+  }
+
   async findAllByLanguageId(languageId: number) {
     const cacheKeyAll = `${this.cacheKey}all`;
     const cached = await this.cache.get(cacheKeyAll);

@@ -17,7 +17,14 @@ export class CoursePrivateController {
 
   @Post()
   async createCourse(@Body() DTO: CreateCourseDto) {
-    if (!DTO.title) {
+    if (
+      !DTO.title ||
+      !DTO.languageId ||
+      !DTO.languageLvlId ||
+      !DTO.icon ||
+      !DTO.description ||
+      !DTO.cid
+    ) {
       throw new BadRequestException('All fields are required');
     }
 

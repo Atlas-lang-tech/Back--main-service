@@ -11,7 +11,7 @@ export class CreateCourseDto {
   description: string;
 
   @IsString()
-  icons: string;
+  icon: string;
 
   @IsNumber()
   languageId: number;
