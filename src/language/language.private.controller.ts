@@ -1,10 +1,10 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Put,
 } from '@nestjs/common';
@@ -21,84 +21,37 @@ export class LanguagePrivateController {
 
   @Post()
   async createLanguage(@Body() DTO: CreateLanguageDto) {
-    if (!DTO.name || !DTO.code || !DTO.icon) {
-      throw new BadRequestException('All fields are required');
-    }
-
     const createLanguage = await this.languageService.create(DTO);
     return createLanguage;
   }
 
   @Get(':id')
-  async getLanguageById(@Param('id') id: number) {
-    if (!id) {
-      throw new BadRequestException('Invalid language ID');
-    }
-
-    if (isNaN(id)) {
-      throw new BadRequestException('Invalid language ID');
-    }
-
-    const language = await this.languageService.findOneById(Number(id));
+  async getLanguageById(@Param('id', ParseIntPipe) id: number) {
+    const language = await this.languageService.findOneById(id);
     return language;
   }
 
   @Put(':id')
   async updateLanguage(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() DTO: CreateLanguageDto,
   ) {
-    if (!id) {
-      throw new BadRequestException('Invalid language ID');
-    }
-
-    if (isNaN(id)) {
-      throw new BadRequestException('Invalid language ID');
-    }
-
-    if (!DTO.name || !DTO.code || !DTO.icon) {
-      throw new BadRequestException('All fields are required');
-    }
-
-    const updatedLanguage = await this.languageService.update(Number(id), DTO);
+    const updatedLanguage = await this.languageService.update(id, DTO);
     return updatedLanguage;
   }
 
   @Delete(':id')
-  async deleteLanguage(@Param('id') id: number) {
-    if (!id) {
-      throw new BadRequestException('Invalid language ID');
-    }
-
-    if (isNaN(id)) {
-      throw new BadRequestException('Invalid language ID');
-    }
-
-    await this.languageService.delete(Number(id));
+  async deleteLanguage(@Param('id', ParseIntPipe) id: number) {
+    await this.languageService.delete(id);
     return { message: 'Language deleted successfully' };
   }
 
   @Post('/level/:id')
   async createLanguageLvl(
     @Body() DTO: AddLanguageLvlDto,
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
   ) {
-    if (!id) {
-      throw new BadRequestException('Invalid language ID');
-    }
-
-    if (isNaN(id)) {
-      throw new BadRequestException('Invalid language ID');
-    }
-
-    if (!DTO.name) {
-      throw new BadRequestException('All fields are required');
-    }
-
-    const createLanguage = await this.languageLvlService.create(
-      DTO,
-      Number(id),
-    );
+    const createLanguage = await this.languageLvlService.create(DTO, id);
     return createLanguage;
   }
 
@@ -110,39 +63,16 @@ export class LanguagePrivateController {
 
   @Put('/level/:id')
   async updateLanguageLvl(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() DTO: AddLanguageLvlDto,
   ) {
-    if (!id) {
-      throw new BadRequestException('Invalid language ID');
-    }
-
-    if (isNaN(id)) {
-      throw new BadRequestException('Invalid language ID');
-    }
-
-    if (!DTO.name) {
-      throw new BadRequestException('Name is required');
-    }
-
-    const updatedLanguageLvl = await this.languageLvlService.update(
-      Number(id),
-      DTO,
-    );
+    const updatedLanguageLvl = await this.languageLvlService.update(id, DTO);
     return updatedLanguageLvl;
   }
 
   @Delete('/level/:id')
-  async deleteLanguageLvl(@Param('id') id: number) {
-    if (!id) {
-      throw new BadRequestException('Invalid language level ID');
-    }
-
-    if (isNaN(id)) {
-      throw new BadRequestException('Invalid language level ID');
-    }
-
-    await this.languageLvlService.delete(Number(id));
+  async deleteLanguageLvl(@Param('id', ParseIntPipe) id: number) {
+    await this.languageLvlService.delete(id);
     return { message: 'Language level deleted successfully' };
   }
 }

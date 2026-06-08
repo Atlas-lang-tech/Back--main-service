@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateLanguageDto } from './dto/create.dto.js';
 import { PrismaService } from '../modules/Prisma/prisma.service.js';
 import { RedisService } from '../modules/redis/redis.service.js';
@@ -16,7 +20,7 @@ export class LanguageService {
     });
 
     if (checkLanguage) {
-      throw new Error('Language already exists');
+      throw new ConflictException('Language already exists');
     }
 
     await this.cache.del(`${this.cacheKey}all`);
@@ -66,7 +70,7 @@ export class LanguageService {
     });
 
     if (!language) {
-      throw new Error('Language not found');
+      throw new NotFoundException('Language not found');
     }
 
     await this.cache.set(cacheKey, JSON.stringify(language), 3600);
@@ -80,7 +84,7 @@ export class LanguageService {
     });
 
     if (!language) {
-      throw new Error('Language not found');
+      throw new NotFoundException('Language not found');
     }
 
     await this.cache.del(`${this.cacheKey}${id}`);
@@ -110,7 +114,7 @@ export class LanguageService {
     });
 
     if (!language) {
-      throw new Error('Language not found');
+      throw new NotFoundException('Language not found');
     }
 
     await this.cache.del(`${this.cacheKey}${id}`);

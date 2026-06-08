@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../modules/Prisma/prisma.service.js';
 import { RedisService } from '../modules/redis/redis.service.js';
 import { AddLanguageLvlDto } from './dto/addLvl.dto.js';
@@ -16,10 +20,9 @@ export class LanguageLvlService {
     });
 
     if (checkLanguageLvl) {
-      throw new Error('Language level already exists');
+      throw new ConflictException('Language level already exists');
     }
 
-    await this.cache.del(`${this.cacheKey}all`);
     const newLanguageLvl = await this.db.languageLvl.create({
       data: {
         name: DTO.name,
@@ -27,12 +30,8 @@ export class LanguageLvlService {
       },
     });
 
-    const languagesLvl = await this.db.languageLvl.findMany();
-    await this.cache.set(
-      `${this.cacheKey}all`,
-      JSON.stringify(languagesLvl),
-      3600,
-    );
+    await this.cache.del(`${this.cacheKey}all`);
+    await this.cache.del(`${this.cacheKey}language-${languageId}`);
 
     return newLanguageLvl;
   }
@@ -52,8 +51,8 @@ export class LanguageLvlService {
   }
 
   async findAllByLanguageId(languageId: number) {
-    const cacheKeyAll = `${this.cacheKey}all`;
-    const cached = await this.cache.get(cacheKeyAll);
+    const cacheKey = `${this.cacheKey}language-${languageId}`;
+    const cached = await this.cache.get(cacheKey);
 
     if (cached) {
       return JSON.parse(cached);
@@ -63,7 +62,7 @@ export class LanguageLvlService {
       where: { languageId },
     });
 
-    await this.cache.set(cacheKeyAll, JSON.stringify(languagesLvl), 3600);
+    await this.cache.set(cacheKey, JSON.stringify(languagesLvl), 3600);
 
     return languagesLvl;
   }
@@ -81,7 +80,7 @@ export class LanguageLvlService {
     });
 
     if (!languageLvl) {
-      throw new Error('Language level not found');
+      throw new NotFoundException('Language level not found');
     }
 
     await this.cache.set(cacheKey, JSON.stringify(languageLvl), 3600);
@@ -95,11 +94,8 @@ export class LanguageLvlService {
     });
 
     if (!languageLvl) {
-      throw new Error('Language level not found');
+      throw new NotFoundException('Language level not found');
     }
-
-    await this.cache.del(`${this.cacheKey}${id}`);
-    await this.cache.del(`${this.cacheKey}all`);
 
     const newLanguageLvl = await this.db.languageLvl.update({
       where: { id },
@@ -108,11 +104,9 @@ export class LanguageLvlService {
       },
     });
 
-    await this.cache.set(
-      `${this.cacheKey}${id}`,
-      JSON.stringify(newLanguageLvl),
-      3600,
-    );
+    await this.cache.del(`${this.cacheKey}${id}`);
+    await this.cache.del(`${this.cacheKey}all`);
+    await this.cache.del(`${this.cacheKey}language-${languageLvl.languageId}`);
 
     return newLanguageLvl;
   }
@@ -123,14 +117,15 @@ export class LanguageLvlService {
     });
 
     if (!languageLvl) {
-      throw new Error('Language level not found');
+      throw new NotFoundException('Language level not found');
     }
-
-    await this.cache.del(`${this.cacheKey}${id}`);
-    await this.cache.del(`${this.cacheKey}all`);
 
     await this.db.languageLvl.delete({
       where: { id },
     });
+
+    await this.cache.del(`${this.cacheKey}${id}`);
+    await this.cache.del(`${this.cacheKey}all`);
+    await this.cache.del(`${this.cacheKey}language-${languageLvl.languageId}`);
   }
 }

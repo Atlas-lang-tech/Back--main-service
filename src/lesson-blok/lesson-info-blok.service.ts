@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../modules/Prisma/prisma.service.js';
 import { RedisService } from '../modules/redis/redis.service.js';
 import { CreateInfoDto } from './dto/CreateInfoBlock.dto.js';
@@ -11,7 +11,6 @@ export class LessonInfoBlokService {
   ) {}
   private cacheKey = `info_block:`;
   async create(DTO: CreateInfoDto, id: number) {
-    await this.cache.del(`${this.cacheKey}all`);
     const newInfo = await this.db.blokInfo.create({
       data: {
         order: Number(DTO.order),
@@ -21,15 +20,14 @@ export class LessonInfoBlokService {
       },
     });
 
-    const info = await this.db.blokInfo.findMany();
-    await this.cache.set(`${this.cacheKey}all`, JSON.stringify(info), 3600);
+    await this.cache.del(`${this.cacheKey}lesson-${id}`);
 
     return newInfo;
   }
 
   async findAll(id: number) {
-    const cacheKeyAll = `${this.cacheKey}all`;
-    const cached = await this.cache.get(cacheKeyAll);
+    const cacheKey = `${this.cacheKey}lesson-${id}`;
+    const cached = await this.cache.get(cacheKey);
 
     if (cached) {
       return JSON.parse(cached);
@@ -39,7 +37,7 @@ export class LessonInfoBlokService {
       where: { lessonId: id },
     });
 
-    await this.cache.set(cacheKeyAll, JSON.stringify(info), 3600);
+    await this.cache.set(cacheKey, JSON.stringify(info), 3600);
 
     return info;
   }
@@ -57,7 +55,7 @@ export class LessonInfoBlokService {
     });
 
     if (!info) {
-      throw new Error('Info not found');
+      throw new NotFoundException('Info not found');
     }
 
     await this.cache.set(cacheKey, JSON.stringify(info), 3600);
@@ -71,11 +69,8 @@ export class LessonInfoBlokService {
     });
 
     if (!info) {
-      throw new Error('Info not found');
+      throw new NotFoundException('Info not found');
     }
-
-    await this.cache.del(`${this.cacheKey}${id}`);
-    await this.cache.del(`${this.cacheKey}all`);
 
     const newInfo = await this.db.blokInfo.update({
       where: { id },
@@ -87,11 +82,9 @@ export class LessonInfoBlokService {
       },
     });
 
-    await this.cache.set(
-      `${this.cacheKey}${id}`,
-      JSON.stringify(newInfo),
-      3600,
-    );
+    await this.cache.del(`${this.cacheKey}${id}`);
+    await this.cache.del(`${this.cacheKey}lesson-${info.lessonId}`);
+    await this.cache.del(`${this.cacheKey}lesson-${lessonId}`);
 
     return newInfo;
   }
@@ -102,14 +95,14 @@ export class LessonInfoBlokService {
     });
 
     if (!info) {
-      throw new Error('Info not found');
+      throw new NotFoundException('Info not found');
     }
-
-    await this.cache.del(`${this.cacheKey}${id}`);
-    await this.cache.del(`${this.cacheKey}all`);
 
     await this.db.blokInfo.delete({
       where: { id },
     });
+
+    await this.cache.del(`${this.cacheKey}${id}`);
+    await this.cache.del(`${this.cacheKey}lesson-${info.lessonId}`);
   }
 }

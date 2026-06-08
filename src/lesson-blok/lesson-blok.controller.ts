@@ -1,10 +1,10 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Put,
 } from '@nestjs/common';
@@ -20,157 +20,91 @@ export class LessonBlokController {
   ) {}
 
   @Post('/info/:id')
-  async createInfo(@Param('id') id: number, @Body() DTO: CreateInfoDto) {
-    if (!DTO.order || !DTO.title || !DTO.text) {
-      throw new Error('Missing required fields');
-    }
-
-    const newInfo = await this.lessonInfoBlokService.create(DTO, Number(id));
+  async createInfo(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() DTO: CreateInfoDto,
+  ) {
+    const newInfo = await this.lessonInfoBlokService.create(DTO, id);
     return newInfo;
   }
 
   @Get('/info/:id')
-  async getInfo(@Param('id') id: number) {
+  async getInfo(@Param('id', ParseIntPipe) id: number) {
     const info = await this.lessonInfoBlokService.findAll(id);
     return info;
   }
 
   @Get('/info/id/:id')
-  async getInfoById(@Param('id') id: number) {
-    if (!id) {
-      throw new BadRequestException('Invalid blok info ID');
-    }
-
-    if (isNaN(id)) {
-      throw new BadRequestException('Invalid blok info ID');
-    }
-
-    const category = await this.lessonInfoBlokService.findOneById(Number(id));
+  async getInfoById(@Param('id', ParseIntPipe) id: number) {
+    const category = await this.lessonInfoBlokService.findOneById(id);
     return category;
   }
 
   @Put('info/:lessonid/id/:id')
   async updateInfo(
-    @Param('lessonid') lessonId: number,
-    @Param('id') id: number,
+    @Param('lessonid', ParseIntPipe) lessonId: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() DTO: CreateInfoDto,
   ) {
-    if (!lessonId) {
-      throw new BadRequestException('Invalid lesson ID');
-    }
-
-    if (isNaN(id)) {
-      throw new BadRequestException('Invalid block info ID');
-    }
-
-    if (!DTO.order || !DTO.title || !DTO.text) {
-      throw new BadRequestException('All fields are required');
-    }
-
     const updatedCategory = await this.lessonInfoBlokService.update(
-      Number(id),
-      Number(lessonId),
+      id,
+      lessonId,
       DTO,
     );
     return updatedCategory;
   }
 
   @Delete('/info/:id')
-  async deleteInfo(@Param('id') id: number) {
-    if (!id) {
-      throw new BadRequestException('Invalid block info ID');
-    }
-
-    if (isNaN(id)) {
-      throw new BadRequestException('Invalid block info ID');
-    }
-
-    await this.lessonInfoBlokService.delete(Number(id));
+  async deleteInfo(@Param('id', ParseIntPipe) id: number) {
+    await this.lessonInfoBlokService.delete(id);
     return { message: 'Block info deleted successfully' };
   }
 
   @Post('/quiz/:id')
-  async createQuiz(@Param('id') id: number, @Body() DTO: CreateInfoDto) {
-    if (!DTO.order || !DTO.title || !DTO.text) {
-      throw new Error('Missing required fields');
-    }
-
-    const newQuiz = await this.lessonQuizBlokService.create(DTO, Number(id));
+  async createQuiz(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() DTO: CreateInfoDto,
+  ) {
+    const newQuiz = await this.lessonQuizBlokService.create(DTO, id);
     return newQuiz;
   }
 
   @Get('/quiz/:id')
-  async getQuiz(@Param('id') id: number) {
+  async getQuiz(@Param('id', ParseIntPipe) id: number) {
     const quiz = await this.lessonQuizBlokService.findAll(id);
     return quiz;
   }
 
   @Get('/quiz/id/:id')
-  async getQuizById(@Param('id') id: number) {
-    if (!id) {
-      throw new BadRequestException('Invalid quiz ID');
-    }
-
-    if (isNaN(id)) {
-      throw new BadRequestException('Invalid quiz ID');
-    }
-
-    const quiz = await this.lessonQuizBlokService.findOneById(Number(id));
+  async getQuizById(@Param('id', ParseIntPipe) id: number) {
+    const quiz = await this.lessonQuizBlokService.findOneById(id);
     return quiz;
   }
 
   @Put('quiz/:lessonid/id/:id')
   async updateQuiz(
-    @Param('lessonid') lessonId: number,
-    @Param('id') id: number,
+    @Param('lessonid', ParseIntPipe) lessonId: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() DTO: CreateInfoDto,
   ) {
-    if (!lessonId) {
-      throw new BadRequestException('Invalid lesson ID');
-    }
-
-    if (isNaN(id)) {
-      throw new BadRequestException('Invalid quiz ID');
-    }
-
-    if (!DTO.order || !DTO.title || !DTO.text) {
-      throw new BadRequestException('All fields are required');
-    }
-
     const updatedQuiz = await this.lessonQuizBlokService.update(
-      Number(id),
-      Number(lessonId),
+      id,
+      lessonId,
       DTO,
     );
     return updatedQuiz;
   }
 
   @Delete('/quiz/:id')
-  async deleteQuiz(@Param('id') id: number) {
-    if (!id) {
-      throw new BadRequestException('Invalid quiz ID');
-    }
-
-    if (isNaN(id)) {
-      throw new BadRequestException('Invalid quiz ID');
-    }
-
-    await this.lessonQuizBlokService.delete(Number(id));
+  async deleteQuiz(@Param('id', ParseIntPipe) id: number) {
+    await this.lessonQuizBlokService.delete(id);
     return { message: 'Quiz deleted successfully' };
   }
 
   @Get(':LessonId')
-  async getBlocsByLessonId(@Param('LessonId') LessonId: number) {
-    if (!LessonId) {
-      throw new BadRequestException('Invalid lesson ID');
-    }
-
-    if (isNaN(LessonId)) {
-      throw new BadRequestException('Invalid lesson ID');
-    }
-
-    const info = await this.lessonInfoBlokService.findAll(Number(LessonId));
-    const quiz = await this.lessonQuizBlokService.findAll(Number(LessonId));
+  async getBlocsByLessonId(@Param('LessonId', ParseIntPipe) LessonId: number) {
+    const info = await this.lessonInfoBlokService.findAll(LessonId);
+    const quiz = await this.lessonQuizBlokService.findAll(LessonId);
 
     const sortDataByOrder = (data: CreateInfoDto[]) => {
       return data.sort((a, b) => a.order - b.order);

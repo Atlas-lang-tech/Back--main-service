@@ -10,12 +10,12 @@ import { validate } from './common/env.validation.js';
 
 @Module({
   imports: [
-    RedisModule,
-    LanguageModule,
     ConfigModule.forRoot({
       isGlobal: true,
       validate,
     }),
+    RedisModule,
+    LanguageModule,
     CategoryModule,
     CourseModule,
     LessonModule,

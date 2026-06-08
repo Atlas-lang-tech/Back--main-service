@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../modules/Prisma/prisma.service.js';
 import { RedisService } from '../modules/redis/redis.service.js';
 import { CreateLessonDto } from './dto/create.dto.js';
@@ -10,6 +14,17 @@ export class LessonService {
     private cache: RedisService,
   ) {}
   private cacheKey = `lesson:`;
+
+  private async invalidate(lesson: {
+    id: number;
+    cid: string;
+    courseId: number;
+  }) {
+    await this.cache.del(`${this.cacheKey}${lesson.id}`);
+    await this.cache.del(`${this.cacheKey}${lesson.cid}`);
+    await this.cache.del(`${this.cacheKey}course-${lesson.courseId}`);
+  }
+
   async create(DTO: CreateLessonDto) {
     const checkLesson = await this.db.lesson.findUnique({
       where: {
@@ -18,10 +33,9 @@ export class LessonService {
     });
 
     if (checkLesson) {
-      throw new Error('Lesson already exists');
+      throw new ConflictException('Lesson already exists');
     }
 
-    await this.cache.del(`${this.cacheKey}all`);
     const newLesson = await this.db.lesson.create({
       data: {
         title: DTO.title,
@@ -32,15 +46,14 @@ export class LessonService {
       },
     });
 
-    const lessons = await this.db.lesson.findMany();
-    await this.cache.set(`${this.cacheKey}all`, JSON.stringify(lessons), 3600);
+    await this.invalidate(newLesson);
 
     return newLesson;
   }
 
   async findAll(id: number) {
-    const cacheKeyAll = `${this.cacheKey}all`;
-    const cached = await this.cache.get(cacheKeyAll);
+    const cacheKey = `${this.cacheKey}course-${id}`;
+    const cached = await this.cache.get(cacheKey);
 
     if (cached) {
       return JSON.parse(cached);
@@ -52,7 +65,7 @@ export class LessonService {
       },
     });
 
-    await this.cache.set(cacheKeyAll, JSON.stringify(lessons), 3600);
+    await this.cache.set(cacheKey, JSON.stringify(lessons), 3600);
 
     return lessons;
   }
@@ -70,7 +83,7 @@ export class LessonService {
     });
 
     if (!lesson) {
-      throw new Error('Lesson not found');
+      throw new NotFoundException('Lesson not found');
     }
 
     await this.cache.set(cacheKey, JSON.stringify(lesson), 3600);
@@ -91,7 +104,7 @@ export class LessonService {
     });
 
     if (!lesson) {
-      throw new Error('Lesson not found');
+      throw new NotFoundException('Lesson not found');
     }
 
     await this.cache.set(cacheKey, JSON.stringify(lesson), 3600);
@@ -105,11 +118,8 @@ export class LessonService {
     });
 
     if (!lesson) {
-      throw new Error('Lesson not found');
+      throw new NotFoundException('Lesson not found');
     }
-
-    await this.cache.del(`${this.cacheKey}${id}`);
-    await this.cache.del(`${this.cacheKey}all`);
 
     const updatedLesson = await this.db.lesson.update({
       where: { id },
@@ -118,11 +128,9 @@ export class LessonService {
       },
     });
 
-    await this.cache.set(
-      `${this.cacheKey}${id}`,
-      JSON.stringify(updatedLesson),
-      3600,
-    );
+    // Invalidate both the old and new course buckets in case courseId changed.
+    await this.invalidate(lesson);
+    await this.invalidate(updatedLesson);
 
     return updatedLesson;
   }
@@ -133,14 +141,13 @@ export class LessonService {
     });
 
     if (!lesson) {
-      throw new Error('Lesson not found');
+      throw new NotFoundException('Lesson not found');
     }
-
-    await this.cache.del(`${this.cacheKey}${id}`);
-    await this.cache.del(`${this.cacheKey}all`);
 
     await this.db.lesson.delete({
       where: { id },
     });
+
+    await this.invalidate(lesson);
   }
 }

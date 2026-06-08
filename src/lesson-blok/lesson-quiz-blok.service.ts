@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../modules/Prisma/prisma.service.js';
 import { RedisService } from '../modules/redis/redis.service.js';
 import { CreateInfoDto } from './dto/CreateInfoBlock.dto.js';
@@ -11,7 +11,6 @@ export class LessonQuizBlokService {
   ) {}
   private cacheKey = `quiz_block:`;
   async create(DTO: CreateInfoDto, id: number) {
-    await this.cache.del(`${this.cacheKey}all`);
     const newQuiz = await this.db.blokQuiz.create({
       data: {
         order: Number(DTO.order),
@@ -21,15 +20,14 @@ export class LessonQuizBlokService {
       },
     });
 
-    const quiz = await this.db.blokQuiz.findMany();
-    await this.cache.set(`${this.cacheKey}all`, JSON.stringify(quiz), 3600);
+    await this.cache.del(`${this.cacheKey}lesson-${id}`);
 
     return newQuiz;
   }
 
   async findAll(id: number) {
-    const cacheKeyAll = `${this.cacheKey}all`;
-    const cached = await this.cache.get(cacheKeyAll);
+    const cacheKey = `${this.cacheKey}lesson-${id}`;
+    const cached = await this.cache.get(cacheKey);
 
     if (cached) {
       return JSON.parse(cached);
@@ -39,7 +37,7 @@ export class LessonQuizBlokService {
       where: { lessonId: id },
     });
 
-    await this.cache.set(cacheKeyAll, JSON.stringify(quiz), 3600);
+    await this.cache.set(cacheKey, JSON.stringify(quiz), 3600);
 
     return quiz;
   }
@@ -57,7 +55,7 @@ export class LessonQuizBlokService {
     });
 
     if (!quiz) {
-      throw new Error('Quiz not found');
+      throw new NotFoundException('Quiz not found');
     }
 
     await this.cache.set(cacheKey, JSON.stringify(quiz), 3600);
@@ -71,11 +69,8 @@ export class LessonQuizBlokService {
     });
 
     if (!quiz) {
-      throw new Error('Quiz not found');
+      throw new NotFoundException('Quiz not found');
     }
-
-    await this.cache.del(`${this.cacheKey}${id}`);
-    await this.cache.del(`${this.cacheKey}all`);
 
     const newQuiz = await this.db.blokQuiz.update({
       where: { id },
@@ -87,11 +82,9 @@ export class LessonQuizBlokService {
       },
     });
 
-    await this.cache.set(
-      `${this.cacheKey}${id}`,
-      JSON.stringify(newQuiz),
-      3600,
-    );
+    await this.cache.del(`${this.cacheKey}${id}`);
+    await this.cache.del(`${this.cacheKey}lesson-${quiz.lessonId}`);
+    await this.cache.del(`${this.cacheKey}lesson-${lessonId}`);
 
     return newQuiz;
   }
@@ -102,14 +95,14 @@ export class LessonQuizBlokService {
     });
 
     if (!quiz) {
-      throw new Error('Quiz not found');
+      throw new NotFoundException('Quiz not found');
     }
-
-    await this.cache.del(`${this.cacheKey}${id}`);
-    await this.cache.del(`${this.cacheKey}all`);
 
     await this.db.blokQuiz.delete({
       where: { id },
     });
+
+    await this.cache.del(`${this.cacheKey}${id}`);
+    await this.cache.del(`${this.cacheKey}lesson-${quiz.lessonId}`);
   }
 }

@@ -1,4 +1,10 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -12,7 +18,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const res: any = exception.getResponse();
-      message = typeof res === 'string' ? res : res.message || res.error || message;
+      message =
+        typeof res === 'string' ? res : res.message || res.error || message;
     } else if (
       exception &&
       typeof exception === 'object' &&
@@ -22,8 +29,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
       const prismaErr: any = exception;
       if (prismaErr.code === 'P2002') {
         status = HttpStatus.CONFLICT;
-        const target = Array.isArray(prismaErr.meta?.target) 
-          ? prismaErr.meta.target.join(', ') 
+        const target = Array.isArray(prismaErr.meta?.target)
+          ? prismaErr.meta.target.join(', ')
           : 'unknown fields';
         message = `Unique constraint failed on the fields: ${target}`;
       } else if (prismaErr.code === 'P2025') {
@@ -31,9 +38,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
         message = 'Record to update/delete not found';
       } else {
         status = HttpStatus.BAD_REQUEST;
-        message = typeof prismaErr.message === 'string' 
-          ? prismaErr.message.split('\n').pop()?.trim() || 'Prisma Database Error' 
-          : 'Prisma Database Error';
+        message =
+          typeof prismaErr.message === 'string'
+            ? prismaErr.message.split('\n').pop()?.trim() ||
+              'Prisma Database Error'
+            : 'Prisma Database Error';
       }
     } else if (exception instanceof Error) {
       message = exception.message;

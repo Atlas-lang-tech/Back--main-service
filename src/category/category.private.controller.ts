@@ -1,10 +1,10 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Put,
 } from '@nestjs/common';
@@ -17,60 +17,28 @@ export class CategoryPrivateController {
 
   @Post()
   async createCategory(@Body() DTO: CreateCategoryDto) {
-    if (!DTO.name) {
-      throw new BadRequestException('All fields are required');
-    }
-
     const createCategory = await this.categoryService.create(DTO);
     return createCategory;
   }
 
   @Get(':id')
-  async getCategoryById(@Param('id') id: number) {
-    if (!id) {
-      throw new BadRequestException('Invalid category ID');
-    }
-
-    if (isNaN(id)) {
-      throw new BadRequestException('Invalid category ID');
-    }
-
-    const category = await this.categoryService.findOneById(Number(id));
+  async getCategoryById(@Param('id', ParseIntPipe) id: number) {
+    const category = await this.categoryService.findOneById(id);
     return category;
   }
 
   @Put(':id')
   async updateCategory(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() DTO: CreateCategoryDto,
   ) {
-    if (!id) {
-      throw new BadRequestException('Invalid category ID');
-    }
-
-    if (isNaN(id)) {
-      throw new BadRequestException('Invalid category ID');
-    }
-
-    if (!DTO.name) {
-      throw new BadRequestException('All fields are required');
-    }
-
-    const updatedCategory = await this.categoryService.update(Number(id), DTO);
+    const updatedCategory = await this.categoryService.update(id, DTO);
     return updatedCategory;
   }
 
   @Delete(':id')
-  async deleteCategory(@Param('id') id: number) {
-    if (!id) {
-      throw new BadRequestException('Invalid category ID');
-    }
-
-    if (isNaN(id)) {
-      throw new BadRequestException('Invalid category ID');
-    }
-
-    await this.categoryService.delete(Number(id));
+  async deleteCategory(@Param('id', ParseIntPipe) id: number) {
+    await this.categoryService.delete(id);
     return { message: 'Category deleted successfully' };
   }
 }

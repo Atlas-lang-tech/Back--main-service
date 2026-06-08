@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../modules/Prisma/prisma.service.js';
 import { RedisService } from '../modules/redis/redis.service.js';
 import { CreateCourseDto } from './dto/create.dto.js';
@@ -10,6 +14,22 @@ export class CourseService {
     private cache: RedisService,
   ) {}
   private cacheKey = `course:`;
+
+  private async invalidate(course: {
+    id: number;
+    cid: string;
+    languageId: number;
+    categoryId: number | null;
+  }) {
+    await this.cache.del(`${this.cacheKey}all`);
+    await this.cache.del(`${this.cacheKey}${course.id}`);
+    await this.cache.del(`${this.cacheKey}${course.cid}`);
+    await this.cache.del(`${this.cacheKey}language-${course.languageId}`);
+    if (course.categoryId != null) {
+      await this.cache.del(`${this.cacheKey}category-${course.categoryId}`);
+    }
+  }
+
   async create(DTO: CreateCourseDto) {
     const checkCourse = await this.db.course.findUnique({
       where: {
@@ -18,10 +38,9 @@ export class CourseService {
     });
 
     if (checkCourse) {
-      throw new Error('Course already exists');
+      throw new ConflictException('Course already exists');
     }
 
-    await this.cache.del(`${this.cacheKey}all`);
     const newCourse = await this.db.course.create({
       data: {
         title: DTO.title,
@@ -34,8 +53,7 @@ export class CourseService {
       },
     });
 
-    const courses = await this.db.course.findMany();
-    await this.cache.set(`${this.cacheKey}all`, JSON.stringify(courses), 3600);
+    await this.invalidate(newCourse);
 
     return newCourse;
   }
@@ -68,7 +86,7 @@ export class CourseService {
     });
 
     if (!course) {
-      throw new Error('Course not found');
+      throw new NotFoundException('Course not found');
     }
 
     await this.cache.set(cacheKey, JSON.stringify(course), 3600);
@@ -89,7 +107,7 @@ export class CourseService {
     });
 
     if (!course) {
-      throw new Error('Course not found');
+      throw new NotFoundException('Course not found');
     }
 
     await this.cache.set(cacheKey, JSON.stringify(course), 3600);
@@ -105,17 +123,13 @@ export class CourseService {
       return JSON.parse(cached);
     }
 
-    const course = await this.db.course.findMany({
+    const courses = await this.db.course.findMany({
       where: { languageId },
     });
 
-    if (!course) {
-      throw new Error('Course not found');
-    }
+    await this.cache.set(cacheKey, JSON.stringify(courses), 3600);
 
-    await this.cache.set(cacheKey, JSON.stringify(course), 3600);
-
-    return course;
+    return courses;
   }
 
   async findOneByCategory(categoryId: number) {
@@ -126,17 +140,13 @@ export class CourseService {
       return JSON.parse(cached);
     }
 
-    const course = await this.db.course.findMany({
+    const courses = await this.db.course.findMany({
       where: { categoryId },
     });
 
-    if (!course) {
-      throw new Error('Course not found');
-    }
+    await this.cache.set(cacheKey, JSON.stringify(courses), 3600);
 
-    await this.cache.set(cacheKey, JSON.stringify(course), 3600);
-
-    return course;
+    return courses;
   }
 
   async update(id: number, DTO: CreateCourseDto) {
@@ -145,11 +155,8 @@ export class CourseService {
     });
 
     if (!course) {
-      throw new Error('Course not found');
+      throw new NotFoundException('Course not found');
     }
-
-    await this.cache.del(`${this.cacheKey}${id}`);
-    await this.cache.del(`${this.cacheKey}all`);
 
     const updatedCourse = await this.db.course.update({
       where: { id },
@@ -158,11 +165,10 @@ export class CourseService {
       },
     });
 
-    await this.cache.set(
-      `${this.cacheKey}${id}`,
-      JSON.stringify(updatedCourse),
-      3600,
-    );
+    // Invalidate caches for both the old and new language/category buckets,
+    // since those relations may have changed.
+    await this.invalidate(course);
+    await this.invalidate(updatedCourse);
 
     return updatedCourse;
   }
@@ -173,14 +179,13 @@ export class CourseService {
     });
 
     if (!course) {
-      throw new Error('Course not found');
+      throw new NotFoundException('Course not found');
     }
-
-    await this.cache.del(`${this.cacheKey}${id}`);
-    await this.cache.del(`${this.cacheKey}all`);
 
     await this.db.course.delete({
       where: { id },
     });
+
+    await this.invalidate(course);
   }
 }

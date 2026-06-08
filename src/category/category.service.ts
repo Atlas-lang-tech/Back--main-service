@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create.dto.js';
 import { PrismaService } from '../modules/Prisma/prisma.service.js';
 import { RedisService } from '../modules/redis/redis.service.js';
@@ -16,7 +20,7 @@ export class CategoryService {
     });
 
     if (checkCategory) {
-      throw new Error('Category already exists');
+      throw new ConflictException('Category already exists');
     }
 
     await this.cache.del(`${this.cacheKey}all`);
@@ -64,7 +68,7 @@ export class CategoryService {
     });
 
     if (!category) {
-      throw new Error('Category not found');
+      throw new NotFoundException('Category not found');
     }
 
     await this.cache.set(cacheKey, JSON.stringify(category), 3600);
@@ -78,7 +82,7 @@ export class CategoryService {
     });
 
     if (!category) {
-      throw new Error('Category not found');
+      throw new NotFoundException('Category not found');
     }
 
     await this.cache.del(`${this.cacheKey}${id}`);
@@ -106,7 +110,7 @@ export class CategoryService {
     });
 
     if (!category) {
-      throw new Error('Category not found');
+      throw new NotFoundException('Category not found');
     }
 
     await this.cache.del(`${this.cacheKey}${id}`);

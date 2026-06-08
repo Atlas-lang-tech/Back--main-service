@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { LanguageService } from './language.service.js';
 import { LanguageLvlService } from './languageLvl.service.js';
 
@@ -16,32 +16,14 @@ export class LanguagePublicController {
   }
 
   @Get('/level/:id')
-  async getAllLanguagesLvl(@Param('id') id: number) {
-    if (!id) {
-      throw new BadRequestException('Invalid language ID');
-    }
-
-    if (isNaN(id)) {
-      throw new BadRequestException('Invalid language ID');
-    }
-
-    const languagesLvl = await this.languageLvlService.findAllByLanguageId(
-      Number(id),
-    );
+  async getAllLanguagesLvl(@Param('id', ParseIntPipe) id: number) {
+    const languagesLvl = await this.languageLvlService.findAllByLanguageId(id);
     return languagesLvl;
   }
 
   @Get('/level/id/:id')
-  async getLanguageLvlById(@Param('id') id: number) {
-    if (!id) {
-      throw new BadRequestException('Invalid language level ID');
-    }
-
-    if (isNaN(id)) {
-      throw new BadRequestException('Invalid language level ID');
-    }
-
-    const languageLvl = await this.languageLvlService.findOneById(Number(id));
+  async getLanguageLvlById(@Param('id', ParseIntPipe) id: number) {
+    const languageLvl = await this.languageLvlService.findOneById(id);
     return languageLvl;
   }
 }
