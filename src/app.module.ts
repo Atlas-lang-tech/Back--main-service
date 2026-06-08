@@ -5,7 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { CategoryModule } from './category/category.module.js';
 import { CourseModule } from './course/course.module.js';
 import { LessonModule } from './lesson/lesson.module.js';
-import { LessonBlokModule } from './lesson-blok/lesson-blok.module.js';
+import { BlockModule } from './block/block.module.js';
 import { validate } from './common/env.validation.js';
 
 @Module({
@@ -19,7 +19,7 @@ import { validate } from './common/env.validation.js';
     CategoryModule,
     CourseModule,
     LessonModule,
-    LessonBlokModule,
+    BlockModule,
   ],
   controllers: [],
   providers: [],

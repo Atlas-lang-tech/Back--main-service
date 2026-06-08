@@ -66,172 +66,35 @@ model lesson {
   description String?
   icon        String?
 
-  course      course     @relation(fields: [courseId], references: [id])
-  courseId    Int
-  blokInfos   blokInfo[]
-  blokQuizzes blokQuiz[]
+  course   course  @relation(fields: [courseId], references: [id])
+  courseId Int
+  blocks   block[]
 
   @@map("lessons")
 }
 
-model blokInfo {
-  id       Int     @id @default(autoincrement())
-  order    Int
-  title    String
-  text     String?
-  lesson   lesson  @relation(fields: [lessonId], references: [id])
+model block {
+  id       Int       @id @default(autoincrement())
+  lesson   lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   lessonId Int
+  order    Int
+  type     BlockType
+  title    String?
+  content  Json
 
-  @@map("blokes_info")
+  @@unique([lessonId, order])
+  @@map("blocks")
 }
 
-model blokQuiz {
-  id                   Int                   @id @default(autoincrement())
-  order                Int
-  title                String
-  text                 String?
-  lesson               lesson                @relation(fields: [lessonId], references: [id])
-  lessonId             Int
-  quizOneTrueChoises   quizOneTrueChoise[]
-  quizFillInBlanks     quizFillInBlank[]
-  quizManualAnswers    quizManualAnswer[]
-  quizBuildSentences   quizBuildSentence[]
-  quizTranslations     quizTranslation[]
-  quizMatchings        quizMatching[]
-  quizDialogues        quizDialogue[]
-  quizRephrasings      quizRephrasing[]
-  quizErrorCorrections quizErrorCorrection[]
-
-  @@map("blokes_quizzes")
-}
-
-model quizOneTrueChoise {
-  id            Int      @id @default(autoincrement())
-  number        Int
-  order         Int
-  title         String
-  text          String?
-  options       String[]
-  correctAnswer String
-  blockQuiz     blokQuiz @relation(fields: [blockQuizId], references: [id])
-  blockQuizId   Int
-
-  @@map("quizzes_one_true_choice")
-}
-
-model quizFillInBlank {
-  id            Int      @id @default(autoincrement())
-  number        Int
-  order         Int
-  title         String
-  text          String
-  correctAnswer String
-  blockQuiz     blokQuiz @relation(fields: [blockQuizId], references: [id])
-  blockQuizId   Int
-
-  @@map("quizzes_fill_in_blank")
-}
-
-model quizManualAnswer {
-  id            Int      @id @default(autoincrement())
-  number        Int
-  order         Int
-  title         String
-  text          String
-  correctAnswer String
-  blockQuiz     blokQuiz @relation(fields: [blockQuizId], references: [id])
-  blockQuizId   Int
-
-  @@map("quizzes_manual_answer")
-}
-
-model quizBuildSentence {
-  id           Int      @id @default(autoincrement())
-  number       Int
-  order        Int
-  title        String
-  words        String[]
-  correctOrder Int[]
-  blockQuiz    blokQuiz @relation(fields: [blockQuizId], references: [id])
-  blockQuizId  Int
-
-  @@map("quizzes_build_sentence")
-}
-
-model quizTranslation {
-  id            Int      @id @default(autoincrement())
-  number        Int
-  order         Int
-  title         String
-  text          String
-  translateTo   String
-  correctAnswer String
-  blockQuiz     blokQuiz @relation(fields: [blockQuizId], references: [id])
-  blockQuizId   Int
-
-  @@map("quizzes_translation")
-}
-
-model quizMatching {
-  id          Int      @id @default(autoincrement())
-  number      Int
-  order       Int
-  title       String
-  pairs       Json
-  blockQuiz   blokQuiz @relation(fields: [blockQuizId], references: [id])
-  blockQuizId Int
-
-  @@map("quizzes_matching")
-}
-
-model quizDialogue {
-  id          Int                    @id @default(autoincrement())
-  number      Int
-  order       Int
-  title       String
-  dialogue    Json
-  questions   quizDialogueQuestion[]
-  blockQuiz   blokQuiz               @relation(fields: [blockQuizId], references: [id])
-  blockQuizId Int
-
-  @@map("quizzes_dialogue")
-}
-
-model quizDialogueQuestion {
-  id             Int          @id @default(autoincrement())
-  number         Int
-  order          Int
-  question       String
-  correctAnswer  String
-  quizDialogue   quizDialogue @relation(fields: [quizDialogueId], references: [id])
-  quizDialogueId Int
-
-  @@map("quizzes_dialogue_questions")
-}
-
-model quizRephrasing {
-  id            Int      @id @default(autoincrement())
-  number        Int
-  order         Int
-  title         String
-  text          String
-  correctAnswer String
-  blockQuiz     blokQuiz @relation(fields: [blockQuizId], references: [id])
-  blockQuizId   Int
-
-  @@map("quizzes_rephrasing")
-}
-
-model quizErrorCorrection {
-  id            Int      @id @default(autoincrement())
-  number        Int
-  order         Int
-  title         String
-  text          String
-  errorText     String
-  correctAnswer String
-  blockQuiz     blokQuiz @relation(fields: [blockQuizId], references: [id])
-  blockQuizId   Int
-
-  @@map("quizzes_error_correction")
+enum BlockType {
+  MARKDOWN
+  ONE_TRUE_CHOICE
+  FILL_IN_BLANK
+  MANUAL_ANSWER
+  BUILD_SENTENCE
+  TRANSLATION
+  MATCHING
+  DIALOGUE
+  REPHRASING
+  ERROR_CORRECTION
 }
