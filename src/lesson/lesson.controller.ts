@@ -5,11 +5,13 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
 } from '@nestjs/common';
 import { LessonService } from './lesson.service.js';
 import { CreateLessonDto } from './dto/create.dto.js';
+import { ReorderLessonsDto } from './dto/reorder.dto.js';
 
 @Controller('private/lesson')
 export class LessonController {
@@ -19,6 +21,15 @@ export class LessonController {
   async createCourse(@Body() DTO: CreateLessonDto) {
     const CreateLesson = await this.lessonService.create(DTO);
     return CreateLesson;
+  }
+
+  @Patch('reorder/:courseId')
+  async reorderLessons(
+    @Param('courseId', ParseIntPipe) courseId: number,
+    @Body() DTO: ReorderLessonsDto,
+  ) {
+    const lessons = await this.lessonService.reorder(courseId, DTO.lessonIds);
+    return lessons;
   }
 
   @Get(':id')
