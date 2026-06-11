@@ -28,7 +28,6 @@ export class LanguageService {
       data: {
         name: DTO.name,
         code: DTO.code,
-        icon: DTO.icon,
       },
     });
 
@@ -95,7 +94,6 @@ export class LanguageService {
       data: {
         name: DTO.name,
         code: DTO.code,
-        icon: DTO.icon,
       },
     });
 

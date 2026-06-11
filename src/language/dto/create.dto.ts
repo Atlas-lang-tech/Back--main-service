@@ -6,7 +6,4 @@ export class CreateLanguageDto {
 
   @IsString()
   code: string;
-
-  @IsString()
-  icon: string;
 }

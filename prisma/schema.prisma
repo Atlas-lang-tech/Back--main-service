@@ -16,7 +16,6 @@ model language {
   id           Int           @id @default(autoincrement())
   name         String        @unique
   code         String        @unique
-  icon         String
   languageLvls languageLvl[]
   courses      course[]
 
