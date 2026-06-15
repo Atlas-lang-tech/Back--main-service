@@ -199,7 +199,10 @@ export class LessonService {
       }
       // Pass 2: write final contiguous order (array index).
       for (let i = 0; i < lessonIds.length; i++) {
-        await tx.lesson.update({ where: { id: lessonIds[i] }, data: { order: i } });
+        await tx.lesson.update({
+          where: { id: lessonIds[i] },
+          data: { order: i },
+        });
       }
     });
 
