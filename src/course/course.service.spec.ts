@@ -3,14 +3,17 @@ import { CourseService } from './course.service.js';
 import {
   createMockPrisma,
   createMockRedis,
+  createMockRabbit,
   type MockPrisma,
   type MockRedis,
+  type MockRabbit,
 } from '../common/testing/mocks.js';
 import { CreateCourseDto } from './dto/create.dto.js';
 
 describe('CourseService', () => {
   let db: MockPrisma;
   let cache: MockRedis;
+  let rabbit: MockRabbit;
   let service: CourseService;
 
   const dto: CreateCourseDto = {
@@ -23,16 +26,17 @@ describe('CourseService', () => {
     categoryId: 3,
   };
 
-  const course = { id: 10, ...dto, categoryId: 3 };
+  const course = { id: 10, ...dto, categoryId: 3, isFree: false };
 
   beforeEach(() => {
     db = createMockPrisma();
     cache = createMockRedis();
-    service = new CourseService(db as any, cache as any);
+    rabbit = createMockRabbit();
+    service = new CourseService(db as any, cache as any, rabbit as any);
   });
 
   describe('create', () => {
-    it('creates a course and invalidates caches', async () => {
+    it('creates a course, invalidates caches and publishes course.upserted', async () => {
       db.course.findUnique.mockResolvedValue(null);
       db.course.create.mockResolvedValue(course);
 
@@ -45,6 +49,11 @@ describe('CourseService', () => {
       expect(cache.del).toHaveBeenCalledWith('course:c1');
       expect(cache.del).toHaveBeenCalledWith('course:language-1');
       expect(cache.del).toHaveBeenCalledWith('course:category-3');
+      expect(rabbit.publish).toHaveBeenCalledWith(
+        'course.upserted',
+        { courseId: 10, isFree: false, title: 'Course 1' },
+        expect.any(String),
+      );
     });
 
     it('throws ConflictException when cid already exists', async () => {
@@ -142,7 +151,7 @@ describe('CourseService', () => {
       expect(db.course.delete).not.toHaveBeenCalled();
     });
 
-    it('deletes and invalidates caches', async () => {
+    it('deletes, invalidates caches and publishes course.deleted', async () => {
       db.course.findUnique.mockResolvedValue(course);
       db.course.delete.mockResolvedValue(course);
 
@@ -150,6 +159,11 @@ describe('CourseService', () => {
 
       expect(db.course.delete).toHaveBeenCalledWith({ where: { id: 10 } });
       expect(cache.del).toHaveBeenCalledWith('course:all');
+      expect(rabbit.publish).toHaveBeenCalledWith(
+        'course.deleted',
+        { courseId: 10 },
+        expect.any(String),
+      );
     });
   });
 });

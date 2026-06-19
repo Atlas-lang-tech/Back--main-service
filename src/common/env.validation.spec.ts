@@ -6,6 +6,7 @@ describe('env.validation validate()', () => {
     REDIS_HOST: 'localhost',
     REDIS_PORT: '6379',
     REDIS_DB: '0',
+    RABBITMQ_URL: 'amqp://guest:guest@localhost:5672',
   };
 
   it('returns the validated config for a valid environment', () => {
@@ -41,5 +42,11 @@ describe('env.validation validate()', () => {
 
   it('throws when REDIS_DB is negative', () => {
     expect(() => validate({ ...validConfig, REDIS_DB: '-1' })).toThrow();
+  });
+
+  it('throws when RABBITMQ_URL is missing', () => {
+    const rest: Record<string, unknown> = { ...validConfig };
+    delete rest.RABBITMQ_URL;
+    expect(() => validate(rest)).toThrow();
   });
 });

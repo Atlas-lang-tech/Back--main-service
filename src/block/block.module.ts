@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { BlockService } from './block.service.js';
 import { PrismaModule } from '../modules/Prisma/prisma.module.js';
+import { AuthModule } from '../auth/auth.module.js';
 import { BlockLessonPrivateController } from './block-lesson.private.controller.js';
 import { BlockPrivateController } from './block.private.controller.js';
 import { BlockPublicController } from './block.public.controller.js';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, AuthModule],
   controllers: [
     BlockLessonPrivateController,
     BlockPrivateController,

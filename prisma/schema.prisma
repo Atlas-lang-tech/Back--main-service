@@ -46,16 +46,32 @@ model course {
   cid         String  @unique
   description String?
   icon        String?
+  isFree      Boolean @default(false)
 
-  language      language    @relation(fields: [languageId], references: [id])
+  language      language      @relation(fields: [languageId], references: [id])
   languageId    Int
-  languageLvl   languageLvl @relation(fields: [languageLvlId], references: [id])
+  languageLvl   languageLvl   @relation(fields: [languageLvlId], references: [id])
   languageLvlId Int
-  category      category?   @relation(fields: [categoryId], references: [id])
+  category      category?     @relation(fields: [categoryId], references: [id])
   categoryId    Int?
   lessons       lesson[]
+  entitlements  entitlement[]
 
   @@map("courses")
+}
+
+// Local read-model of course ownership. Populated from billing's
+// `course.purchased` events over RabbitMQ so access checks stay local (no
+// synchronous cross-service calls on the content-delivery hot path).
+model entitlement {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  course    course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId  Int
+  createdAt DateTime @default(now())
+
+  @@unique([userId, courseId])
+  @@map("entitlements")
 }
 
 model lesson {

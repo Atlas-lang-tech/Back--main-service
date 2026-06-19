@@ -15,6 +15,7 @@ type Model = {
   findMany: jest.Mock;
   create: jest.Mock;
   update: jest.Mock;
+  upsert: jest.Mock;
   delete: jest.Mock;
   deleteMany: jest.Mock;
 };
@@ -26,6 +27,7 @@ function createModelMock(): Model {
     findMany: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
+    upsert: jest.fn(),
     delete: jest.fn(),
     deleteMany: jest.fn(),
   };
@@ -38,6 +40,7 @@ export interface MockPrisma {
   languageLvl: Model;
   lesson: Model;
   block: Model;
+  entitlement: Model;
   $transaction: jest.Mock;
 }
 
@@ -49,6 +52,7 @@ export function createMockPrisma(): MockPrisma {
     languageLvl: createModelMock(),
     lesson: createModelMock(),
     block: createModelMock(),
+    entitlement: createModelMock(),
     // By default run the interactive-transaction callback against the same
     // mock client, so two-pass reorder/sync logic executes inline.
     $transaction: jest.fn((cb: (tx: unknown) => unknown) => cb(prisma)),
@@ -74,5 +78,17 @@ export function createMockRedis(): MockRedis {
     exists: jest.fn(() => Promise.resolve(false)),
     expire: jest.fn(() => Promise.resolve(undefined)),
     keys: jest.fn(() => Promise.resolve([])),
+  };
+}
+
+export interface MockRabbit {
+  publish: jest.Mock;
+  consume: jest.Mock;
+}
+
+export function createMockRabbit(): MockRabbit {
+  return {
+    publish: jest.fn(),
+    consume: jest.fn(() => Promise.resolve(undefined)),
   };
 }

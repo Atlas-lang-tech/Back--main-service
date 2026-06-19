@@ -1,4 +1,4 @@
-import { IsOptional, IsNumber, IsString } from 'class-validator';
+import { IsBoolean, IsOptional, IsNumber, IsString } from 'class-validator';
 
 export class CreateCourseDto {
   @IsString()
@@ -22,4 +22,8 @@ export class CreateCourseDto {
   @IsOptional()
   @IsNumber()
   categoryId?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isFree?: boolean;
 }

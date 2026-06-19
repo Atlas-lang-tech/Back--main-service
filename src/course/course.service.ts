@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import {
   ConflictException,
   Injectable,
@@ -5,6 +6,10 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../modules/Prisma/prisma.service.js';
 import { RedisService } from '../modules/redis/redis.service.js';
+import {
+  RabbitService,
+  RoutingKeys,
+} from '../modules/rabbit/rabbit.service.js';
 import { CreateCourseDto } from './dto/create.dto.js';
 
 @Injectable()
@@ -12,8 +17,22 @@ export class CourseService {
   constructor(
     private db: PrismaService,
     private cache: RedisService,
+    private rabbit: RabbitService,
   ) {}
   private cacheKey = `course:`;
+
+  // Notifies billing so it can keep its Product catalog in sync.
+  private publishUpserted(course: {
+    id: number;
+    isFree: boolean;
+    title: string;
+  }) {
+    this.rabbit.publish(
+      RoutingKeys.courseUpserted,
+      { courseId: course.id, isFree: course.isFree, title: course.title },
+      randomUUID(),
+    );
+  }
 
   private async invalidate(course: {
     id: number;
@@ -47,6 +66,7 @@ export class CourseService {
         cid: DTO.cid,
         description: DTO.description,
         icon: DTO.icon,
+        isFree: DTO.isFree,
         languageId: DTO.languageId,
         languageLvlId: DTO.languageLvlId,
         categoryId: DTO.categoryId,
@@ -54,6 +74,7 @@ export class CourseService {
     });
 
     await this.invalidate(newCourse);
+    this.publishUpserted(newCourse);
 
     return newCourse;
   }
@@ -169,6 +190,7 @@ export class CourseService {
     // since those relations may have changed.
     await this.invalidate(course);
     await this.invalidate(updatedCourse);
+    this.publishUpserted(updatedCourse);
 
     return updatedCourse;
   }
@@ -187,5 +209,10 @@ export class CourseService {
     });
 
     await this.invalidate(course);
+    this.rabbit.publish(
+      RoutingKeys.courseDeleted,
+      { courseId: course.id },
+      randomUUID(),
+    );
   }
 }
