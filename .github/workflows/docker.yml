@@ -36,11 +36,21 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
+      rabbitmq:
+        image: rabbitmq:3-alpine
+        ports:
+          - 5672:5672
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       DATABASE_URL: postgresql://postgres:admin@localhost:5432/testdb
       REDIS_HOST: localhost
       REDIS_PORT: '6379'
       REDIS_DB: '0'
+      RABBITMQ_URL: amqp://guest:guest@localhost:5672
     steps:
       - name: Checkout
         uses: actions/checkout@v4
