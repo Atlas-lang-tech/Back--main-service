@@ -8,12 +8,19 @@ import {
   Patch,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { LessonService } from './lesson.service.js';
 import { CreateLessonDto } from './dto/create.dto.js';
 import { ReorderLessonsDto } from './dto/reorder.dto.js';
+import { UserContextGuard } from '../common/auth/user-context.guard.js';
+import { RolesGuard } from '../common/auth/roles.guard.js';
+import { Roles } from '../common/auth/roles.decorator.js';
+import { Role } from '../common/auth/roles.js';
 
 @Controller('private/lesson')
+@UseGuards(UserContextGuard, RolesGuard)
+@Roles([Role.ADMIN])
 export class LessonController {
   constructor(private readonly lessonService: LessonService) {}
 

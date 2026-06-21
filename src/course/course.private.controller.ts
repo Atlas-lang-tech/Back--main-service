@@ -7,11 +7,18 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { CourseService } from './course.service.js';
 import { CreateCourseDto } from './dto/create.dto.js';
+import { UserContextGuard } from '../common/auth/user-context.guard.js';
+import { RolesGuard } from '../common/auth/roles.guard.js';
+import { Roles } from '../common/auth/roles.decorator.js';
+import { Role } from '../common/auth/roles.js';
 
 @Controller('private/course')
+@UseGuards(UserContextGuard, RolesGuard)
+@Roles([Role.ADMIN])
 export class CoursePrivateController {
   constructor(private readonly courseService: CourseService) {}
 

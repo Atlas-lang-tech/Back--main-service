@@ -20,7 +20,14 @@ describe('Content hierarchy (e2e)', () => {
     await app.close();
   });
 
-  const http = () => request(app.getHttpServer());
+  // e2e requests run as an admin: the private course/lesson/block routes are
+  // guarded by UserContextGuard + RolesGuard([ADMIN]). Default headers mimic
+  // what Traefik ForwardAuth injects.
+  const http = () =>
+    request
+      .agent(app.getHttpServer())
+      .set('X-User-Id', 'e2e-admin')
+      .set('X-User-Role', 'ADMIN');
 
   it('creates language → level → category → course → lesson → block and reads them back', async () => {
     // Language

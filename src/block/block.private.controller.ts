@@ -6,11 +6,18 @@ import {
   Param,
   ParseIntPipe,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { BlockService } from './block.service.js';
 import { CreateBlockDto } from './dto/create-block.dto.js';
+import { UserContextGuard } from '../common/auth/user-context.guard.js';
+import { RolesGuard } from '../common/auth/roles.guard.js';
+import { Roles } from '../common/auth/roles.decorator.js';
+import { Role } from '../common/auth/roles.js';
 
 @Controller('private/block')
+@UseGuards(UserContextGuard, RolesGuard)
+@Roles([Role.ADMIN])
 export class BlockPrivateController {
   constructor(private readonly blockService: BlockService) {}
 

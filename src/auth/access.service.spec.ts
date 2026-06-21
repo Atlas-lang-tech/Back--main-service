@@ -6,7 +6,7 @@ import {
   type MockPrisma,
   type MockRedis,
 } from '../common/testing/mocks.js';
-import type { UserContext } from './user.types.js';
+import type { UserContext } from '../common/auth/user-context.guard.js';
 
 describe('AccessService', () => {
   let db: MockPrisma;

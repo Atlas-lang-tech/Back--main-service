@@ -7,12 +7,12 @@ import {
 } from '@nestjs/common';
 import { BlockService } from './block.service.js';
 import { AccessService } from '../auth/access.service.js';
-import { UserContextGuard } from '../auth/user-context.guard.js';
-import { CurrentUser } from '../auth/current-user.decorator.js';
-import type { UserContext } from '../auth/user.types.js';
+import { OptionalUserContextGuard } from '../common/auth/optional-user-context.guard.js';
+import { CurrentUser } from '../common/auth/current-user.decorator.js';
+import type { UserContext } from '../common/auth/user-context.guard.js';
 
 @Controller('public/lesson')
-@UseGuards(UserContextGuard)
+@UseGuards(OptionalUserContextGuard)
 export class BlockPublicController {
   constructor(
     private readonly blockService: BlockService,

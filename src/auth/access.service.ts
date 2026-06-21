@@ -5,7 +5,8 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../modules/Prisma/prisma.service.js';
 import { RedisService } from '../modules/redis/redis.service.js';
-import { ADMIN_ROLE, type UserContext } from './user.types.js';
+import { Role } from '../common/auth/roles.js';
+import type { UserContext } from '../common/auth/user-context.guard.js';
 
 /**
  * Decides whether a caller may read a course's lesson content.
@@ -53,7 +54,7 @@ export class AccessService {
   ): Promise<boolean> {
     if (course.isFree) return true;
     if (!user) return false;
-    if (user.role === ADMIN_ROLE) return true;
+    if (user.role === Role.ADMIN) return true;
 
     const key = this.entitlementKey(user.id, course.id);
     const cached = await this.cache.get(key);
