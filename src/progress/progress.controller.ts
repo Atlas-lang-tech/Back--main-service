@@ -6,13 +6,13 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ProgressService } from './progress.service.js';
 import { AccessService } from '../auth/access.service.js';
-import { UserContextGuard } from '../common/auth/user-context.guard.js';
 import { CurrentUser } from '../common/auth/current-user.decorator.js';
 import type { UserContext } from '../common/auth/user-context.guard.js';
+import { UserContextGuard } from '../common/auth/user-context.guard.js';
+import { ProgressService } from './progress.service.js';
 
-@Controller('public/progress')
+@Controller('private/progress')
 @UseGuards(UserContextGuard)
 export class ProgressController {
   constructor(
