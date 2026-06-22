@@ -13,6 +13,7 @@ type Model = {
   findUnique: jest.Mock;
   findFirst: jest.Mock;
   findMany: jest.Mock;
+  count: jest.Mock;
   create: jest.Mock;
   update: jest.Mock;
   upsert: jest.Mock;
@@ -25,6 +26,7 @@ function createModelMock(): Model {
     findUnique: jest.fn(),
     findFirst: jest.fn(),
     findMany: jest.fn(),
+    count: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
     upsert: jest.fn(),
@@ -41,6 +43,7 @@ export interface MockPrisma {
   lesson: Model;
   block: Model;
   entitlement: Model;
+  lessonProgress: Model;
   $transaction: jest.Mock;
 }
 
@@ -53,6 +56,7 @@ export function createMockPrisma(): MockPrisma {
     lesson: createModelMock(),
     block: createModelMock(),
     entitlement: createModelMock(),
+    lessonProgress: createModelMock(),
     // By default run the interactive-transaction callback against the same
     // mock client, so two-pass reorder/sync logic executes inline.
     $transaction: jest.fn((cb: (tx: unknown) => unknown) => cb(prisma)),

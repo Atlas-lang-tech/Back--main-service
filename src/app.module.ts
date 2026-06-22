@@ -7,6 +7,7 @@ import { CategoryModule } from './category/category.module.js';
 import { CourseModule } from './course/course.module.js';
 import { LessonModule } from './lesson/lesson.module.js';
 import { BlockModule } from './block/block.module.js';
+import { ProgressModule } from './progress/progress.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { validate } from './common/env.validation.js';
 
@@ -24,6 +25,7 @@ import { validate } from './common/env.validation.js';
     CourseModule,
     LessonModule,
     BlockModule,
+    ProgressModule,
   ],
   controllers: [],
   providers: [],

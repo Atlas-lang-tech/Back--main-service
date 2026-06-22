@@ -84,9 +84,27 @@ model lesson {
   course   course  @relation(fields: [courseId], references: [id])
   courseId Int
   blocks   block[]
+  progress lessonProgress[]
 
   @@unique([courseId, order])
   @@map("lessons")
+}
+
+// Local read-model of per-user lesson completion. Keyed by `userId` (a plain
+// string from the gateway's X-User-Id; there is no local user table). `courseId`
+// is denormalized so per-course progress counts run on a single index without
+// joining through `lesson`.
+model lessonProgress {
+  id          Int      @id @default(autoincrement())
+  userId      String
+  lesson      lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lessonId    Int
+  courseId    Int
+  completedAt DateTime @default(now())
+
+  @@unique([userId, lessonId])
+  @@index([userId, courseId])
+  @@map("lesson_progress")
 }
 
 model block {
