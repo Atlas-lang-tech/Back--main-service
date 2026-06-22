@@ -10,9 +10,6 @@ export class CreateLessonDto {
   @IsString()
   description: string;
 
-  @IsString()
-  icon: string;
-
   @IsNumber()
   courseId: number;
 }

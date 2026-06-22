@@ -21,7 +21,6 @@ describe('LessonService', () => {
     cid: 'l1',
     title: 'Lesson 1',
     description: 'desc',
-    icon: 'icon',
     courseId: 7,
   };
 

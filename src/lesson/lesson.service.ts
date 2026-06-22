@@ -52,7 +52,6 @@ export class LessonService {
         title: DTO.title,
         cid: DTO.cid,
         description: DTO.description,
-        icon: DTO.icon,
         courseId: DTO.courseId,
         order: await this.nextOrder(DTO.courseId),
       },
