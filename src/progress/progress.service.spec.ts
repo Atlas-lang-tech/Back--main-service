@@ -106,4 +106,67 @@ describe('ProgressService', () => {
       );
     });
   });
+
+  describe('getAdminStats', () => {
+    it('aggregates platform-wide completion stats and caches the result', async () => {
+      const today = new Date();
+      cache.get.mockResolvedValue(null);
+      db.lessonProgress.count
+        .mockResolvedValueOnce(42) // totalCompletions
+        .mockResolvedValueOnce(9); // completionsLast7d
+      db.lessonProgress.groupBy
+        .mockResolvedValueOnce([{ userId: 'a' }, { userId: 'b' }]) // activeLearners
+        .mockResolvedValueOnce([{ userId: 'a' }]) // activeToday
+        .mockResolvedValueOnce([
+          { courseId: 7, _count: { _all: 30 } },
+          { courseId: 3, _count: { _all: 12 } },
+        ]); // topCourses
+      db.lessonProgress.findMany.mockResolvedValue([
+        { completedAt: today },
+        { completedAt: today },
+      ]);
+      db.course.findMany.mockResolvedValue([
+        { id: 7, title: 'English B1' },
+        { id: 3, title: 'Spanish A2' },
+      ]);
+
+      const result = await service.getAdminStats();
+
+      expect(result.totalCompletions).toBe(42);
+      expect(result.completionsLast7d).toBe(9);
+      expect(result.activeLearners).toBe(2);
+      expect(result.activeToday).toBe(1);
+      expect(result.topCourses).toEqual([
+        { courseId: 7, title: 'English B1', completions: 30 },
+        { courseId: 3, title: 'Spanish A2', completions: 12 },
+      ]);
+      expect(result.dailyCompletions).toHaveLength(7);
+      expect(
+        result.dailyCompletions[result.dailyCompletions.length - 1].count,
+      ).toBe(2);
+      expect(cache.set).toHaveBeenCalledWith(
+        'progress:admin-stats',
+        JSON.stringify(result),
+        300,
+      );
+    });
+
+    it('returns the cached stats without hitting the database', async () => {
+      const cached = {
+        totalCompletions: 1,
+        activeLearners: 1,
+        activeToday: 0,
+        completionsLast7d: 1,
+        dailyCompletions: [],
+        topCourses: [],
+      };
+      cache.get.mockResolvedValue(JSON.stringify(cached));
+
+      const result = await service.getAdminStats();
+
+      expect(result).toEqual(cached);
+      expect(db.lessonProgress.count).not.toHaveBeenCalled();
+      expect(db.lessonProgress.groupBy).not.toHaveBeenCalled();
+    });
+  });
 });

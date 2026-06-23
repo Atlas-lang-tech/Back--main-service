@@ -8,6 +8,15 @@ export interface CourseProgress {
   lessonIds: number[];
 }
 
+export interface ProgressStats {
+  totalCompletions: number;
+  activeLearners: number;
+  activeToday: number;
+  completionsLast7d: number;
+  dailyCompletions: { date: string; count: number }[];
+  topCourses: { courseId: number; title: string; completions: number }[];
+}
+
 /**
  * Tracks per-user lesson completion (lesson is the unit). Progress is a local
  * read-model keyed by the gateway's `userId` string — see `lessonProgress` in
@@ -20,6 +29,7 @@ export class ProgressService {
     private cache: RedisService,
   ) {}
   private cacheKey = `progress:`;
+  private statsKey = `${this.cacheKey}admin-stats`;
 
   private courseKey(userId: string, courseId: number) {
     return `${this.cacheKey}${userId}:course-${courseId}`;
@@ -83,5 +93,107 @@ export class ProgressService {
     await this.cache.set(cacheKey, JSON.stringify(result), 3600);
 
     return result;
+  }
+
+  /** Platform-wide completion analytics for the admin dashboard. Cached briefly. */
+  async getAdminStats(): Promise<ProgressStats> {
+    const cached = await this.cache.get(this.statsKey);
+    if (cached) {
+      return JSON.parse(cached) as ProgressStats;
+    }
+
+    const now = new Date();
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const [
+      totalCompletions,
+      learners,
+      todayLearners,
+      completionsLast7d,
+      recent,
+      grouped,
+    ] = await Promise.all([
+      this.db.lessonProgress.count(),
+      this.db.lessonProgress.groupBy({ by: ['userId'] }),
+      this.db.lessonProgress.groupBy({
+        by: ['userId'],
+        where: { completedAt: { gte: startOfToday } },
+      }),
+      this.db.lessonProgress.count({
+        where: { completedAt: { gte: sevenDaysAgo } },
+      }),
+      this.db.lessonProgress.findMany({
+        where: { completedAt: { gte: sevenDaysAgo } },
+        select: { completedAt: true },
+      }),
+      this.db.lessonProgress.groupBy({
+        by: ['courseId'],
+        _count: { _all: true },
+        orderBy: { _count: { courseId: 'desc' } },
+        take: 5,
+      }),
+    ]);
+
+    const courseIds = grouped.map((g) => g.courseId);
+    const courses = courseIds.length
+      ? await this.db.course.findMany({
+          where: { id: { in: courseIds } },
+          select: { id: true, title: true },
+        })
+      : [];
+    const titleById = new Map(courses.map((c) => [c.id, c.title]));
+
+    const topCourses = grouped.map((g) => ({
+      courseId: g.courseId,
+      title: titleById.get(g.courseId) ?? `Course #${g.courseId}`,
+      completions: g._count._all,
+    }));
+
+    const result: ProgressStats = {
+      totalCompletions,
+      activeLearners: learners.length,
+      activeToday: todayLearners.length,
+      completionsLast7d,
+      dailyCompletions: this.bucketByDay(
+        recent.map((r) => r.completedAt),
+        7,
+      ),
+      topCourses,
+    };
+
+    await this.cache.set(this.statsKey, JSON.stringify(result), 300);
+
+    return result;
+  }
+
+  /** Counts dates into the last `days` daily UTC buckets (oldest → newest, zero-filled). */
+  private bucketByDay(dates: Date[], days: number) {
+    const buckets = new Map<string, number>();
+    const now = new Date();
+    const todayUtc = Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+    );
+    const dayMs = 24 * 60 * 60 * 1000;
+
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(todayUtc - i * dayMs);
+      buckets.set(d.toISOString().slice(0, 10), 0);
+    }
+
+    for (const date of dates) {
+      const key = new Date(date).toISOString().slice(0, 10);
+      if (buckets.has(key)) {
+        buckets.set(key, (buckets.get(key) ?? 0) + 1);
+      }
+    }
+
+    return [...buckets.entries()].map(([date, count]) => ({ date, count }));
   }
 }

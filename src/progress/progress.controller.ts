@@ -8,17 +8,26 @@ import {
 } from '@nestjs/common';
 import { AccessService } from '../auth/access.service.js';
 import { CurrentUser } from '../common/auth/current-user.decorator.js';
+import { Roles } from '../common/auth/roles.decorator.js';
+import { RolesGuard } from '../common/auth/roles.guard.js';
+import { Role } from '../common/auth/roles.js';
 import type { UserContext } from '../common/auth/user-context.guard.js';
 import { UserContextGuard } from '../common/auth/user-context.guard.js';
 import { ProgressService } from './progress.service.js';
 
 @Controller('private/progress')
-@UseGuards(UserContextGuard)
+@UseGuards(UserContextGuard, RolesGuard)
 export class ProgressController {
   constructor(
     private readonly progressService: ProgressService,
     private readonly accessService: AccessService,
   ) {}
+
+  @Get('stats')
+  @Roles([Role.ADMIN, Role.MODERATOR])
+  async getAdminStats() {
+    return this.progressService.getAdminStats();
+  }
 
   @Post('lesson/:lessonId/complete')
   async completeLesson(

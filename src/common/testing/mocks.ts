@@ -14,6 +14,7 @@ type Model = {
   findFirst: jest.Mock;
   findMany: jest.Mock;
   count: jest.Mock;
+  groupBy: jest.Mock;
   create: jest.Mock;
   update: jest.Mock;
   upsert: jest.Mock;
@@ -27,6 +28,7 @@ function createModelMock(): Model {
     findFirst: jest.fn(),
     findMany: jest.fn(),
     count: jest.fn(),
+    groupBy: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
     upsert: jest.fn(),
