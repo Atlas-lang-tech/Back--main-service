@@ -68,6 +68,7 @@ export class CourseService {
         icon: DTO.icon,
         isFree: DTO.isFree,
         languageId: DTO.languageId,
+        nativeLanguageId: DTO.nativeLanguageId,
         languageLvlId: DTO.languageLvlId,
         categoryId: DTO.categoryId,
       },

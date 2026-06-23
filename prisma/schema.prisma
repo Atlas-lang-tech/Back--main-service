@@ -16,8 +16,9 @@ model language {
   id           Int           @id @default(autoincrement())
   name         String        @unique
   code         String        @unique
-  languageLvls languageLvl[]
-  courses      course[]
+  languageLvls  languageLvl[]
+  courses       course[]     @relation("CourseLanguage")
+  nativeCourses course[]     @relation("CourseNativeLanguage")
 
   @@map("languages")
 }
@@ -48,12 +49,14 @@ model course {
   icon        String?
   isFree      Boolean @default(false)
 
-  language      language      @relation(fields: [languageId], references: [id])
-  languageId    Int
-  languageLvl   languageLvl   @relation(fields: [languageLvlId], references: [id])
-  languageLvlId Int
-  category      category?     @relation(fields: [categoryId], references: [id])
-  categoryId    Int?
+  language         language    @relation("CourseLanguage", fields: [languageId], references: [id])
+  languageId       Int
+  nativeLanguage   language?   @relation("CourseNativeLanguage", fields: [nativeLanguageId], references: [id])
+  nativeLanguageId Int?
+  languageLvl      languageLvl @relation(fields: [languageLvlId], references: [id])
+  languageLvlId    Int
+  category         category?   @relation(fields: [categoryId], references: [id])
+  categoryId       Int?
   lessons       lesson[]
   entitlements  entitlement[]
 

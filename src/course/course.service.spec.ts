@@ -22,6 +22,7 @@ describe('CourseService', () => {
     description: 'desc',
     icon: 'icon',
     languageId: 1,
+    nativeLanguageId: 4,
     languageLvlId: 2,
     categoryId: 3,
   };
@@ -44,6 +45,11 @@ describe('CourseService', () => {
 
       expect(result).toEqual(course);
       expect(db.course.create).toHaveBeenCalledTimes(1);
+      expect(db.course.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          nativeLanguageId: dto.nativeLanguageId,
+        }),
+      });
       expect(cache.del).toHaveBeenCalledWith('course:all');
       expect(cache.del).toHaveBeenCalledWith('course:10');
       expect(cache.del).toHaveBeenCalledWith('course:c1');

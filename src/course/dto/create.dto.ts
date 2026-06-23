@@ -21,6 +21,10 @@ export class CreateCourseDto {
 
   @IsOptional()
   @IsNumber()
+  nativeLanguageId?: number;
+
+  @IsOptional()
+  @IsNumber()
   categoryId?: number;
 
   @IsOptional()
