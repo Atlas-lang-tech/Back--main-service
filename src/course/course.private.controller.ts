@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
   UseGuards,
@@ -15,6 +16,7 @@ import { Role } from '../common/auth/roles.js';
 import { UserContextGuard } from '../common/auth/user-context.guard.js';
 import { CourseService } from './course.service.js';
 import { CreateCourseDto } from './dto/create.dto.js';
+import { SetVisibilityDto } from './dto/visibility.dto.js';
 
 @Controller('private/course')
 @UseGuards(UserContextGuard, RolesGuard)
@@ -28,11 +30,31 @@ export class CoursePrivateController {
     return createCourse;
   }
 
+  @Get()
+  @Roles([Role.ADMIN, Role.MODERATOR])
+  async getAllCourses() {
+    const courses = await this.courseService.findAllAdmin();
+    return courses;
+  }
+
   @Get(':id')
   @Roles([Role.ADMIN, Role.MODERATOR, Role.USER])
   async getCourseById(@Param('id', ParseIntPipe) id: number) {
     const course = await this.courseService.findOneById(id);
     return course;
+  }
+
+  @Patch(':id/visibility')
+  @Roles([Role.ADMIN, Role.MODERATOR])
+  async setVisibility(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() DTO: SetVisibilityDto,
+  ) {
+    const updatedCourse = await this.courseService.setVisibility(
+      id,
+      DTO.isVisible,
+    );
+    return updatedCourse;
   }
 
   @Put(':id')

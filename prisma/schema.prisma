@@ -48,6 +48,7 @@ model course {
   description String?
   icon        String?
   isFree      Boolean @default(false)
+  isVisible   Boolean @default(true)
 
   language         language    @relation("CourseLanguage", fields: [languageId], references: [id])
   languageId       Int

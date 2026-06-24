@@ -30,4 +30,8 @@ export class CreateCourseDto {
   @IsOptional()
   @IsBoolean()
   isFree?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isVisible?: boolean;
 }

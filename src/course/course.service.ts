@@ -67,6 +67,7 @@ export class CourseService {
         description: DTO.description,
         icon: DTO.icon,
         isFree: DTO.isFree,
+        isVisible: DTO.isVisible,
         languageId: DTO.languageId,
         nativeLanguageId: DTO.nativeLanguageId,
         languageLvlId: DTO.languageLvlId,
@@ -88,11 +89,21 @@ export class CourseService {
       return JSON.parse(cached);
     }
 
-    const courses = await this.db.course.findMany();
+    const courses = await this.db.course.findMany({
+      where: { isVisible: true },
+    });
 
     await this.cache.set(cacheKeyAll, JSON.stringify(courses), 3600);
 
     return courses;
+  }
+
+  // Admin listing: returns every course, visible or hidden, bypassing cache
+  // so the panel always reflects the current state.
+  async findAllAdmin() {
+    return this.db.course.findMany({
+      orderBy: { id: 'asc' },
+    });
   }
 
   async findOneById(id: number) {
@@ -146,7 +157,7 @@ export class CourseService {
     }
 
     const courses = await this.db.course.findMany({
-      where: { languageId },
+      where: { languageId, isVisible: true },
     });
 
     await this.cache.set(cacheKey, JSON.stringify(courses), 3600);
@@ -163,7 +174,7 @@ export class CourseService {
     }
 
     const courses = await this.db.course.findMany({
-      where: { categoryId },
+      where: { categoryId, isVisible: true },
     });
 
     await this.cache.set(cacheKey, JSON.stringify(courses), 3600);
@@ -192,6 +203,25 @@ export class CourseService {
     await this.invalidate(course);
     await this.invalidate(updatedCourse);
     this.publishUpserted(updatedCourse);
+
+    return updatedCourse;
+  }
+
+  async setVisibility(id: number, isVisible: boolean) {
+    const course = await this.db.course.findUnique({
+      where: { id },
+    });
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    const updatedCourse = await this.db.course.update({
+      where: { id },
+      data: { isVisible },
+    });
+
+    await this.invalidate(updatedCourse);
 
     return updatedCourse;
   }
